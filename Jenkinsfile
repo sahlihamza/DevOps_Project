@@ -6,18 +6,19 @@ pipeline {
         CONTAINER_NAME = "student-app"
         HOST_PORT = "8081"
         CONTAINER_PORT = "8089"
-        SONARQUBE_SERVER = "MySonarQube" // Nom du serveur SonarQube défini dans Jenkins
+        SONARQUBE_SERVER = "MySonarQube" // Nom du serveur SonarQube défini dans Jenkins global config
     }
 
     stages {
         // 1️⃣ Récupérer le code depuis Git
         stage('Checkout') {
             steps {
+                echo "🔄 Checkout du code depuis GitHub..."
                 git branch: 'main', url: 'https://github.com/sahlihamza/DevOps_Project.git'
             }
         }
 
-        // 2️⃣ Maven clean & compile pour préparer le projet
+        // 2️⃣ Maven clean & compile
         stage('Maven Clean & Compile') {
             steps {
                 echo "🔧 Maven Clean et Compile..."
@@ -29,17 +30,12 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 echo "🔍 Analyse SonarQube en cours..."
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    sh '''
-                       mvn sonar:sonar \
-                         -Dsonar.projectKey=student-management \
-                         -Dsonar.host.url=http://172.23.185.68:9000 \
-                         -Dsonar.login=$SONAR_TOKEN
-                    '''
+                // Vérifie que SonarQube est correctement configuré dans Jenkins → Global Tool Configuration
+                withSonarQubeEnv('MySonarQube') {
+                    sh 'mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN'
                 }
             }
         }
-}
 
         // 4️⃣ Build Maven pour générer le JAR
         stage('Build Maven') {
@@ -50,11 +46,11 @@ pipeline {
             }
         }
 
-        // 5️⃣ Création de l'image Docker (après SonarQube)
+        // 5️⃣ Création de l'image Docker
         stage('Docker Build') {
             steps {
                 echo "🐳 Création de l'image Docker..."
-                sh 'ls -l'
+                sh 'ls -l' // Vérifie que Dockerfile est présent
                 sh "docker build -t ${IMAGE_NAME} ."
             }
         }
