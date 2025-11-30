@@ -1,0 +1,19 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                git branch: 'main', url: 'https://github.com/sahlihamza/DevOps_Project.git'
+                sh 'mvn clean package'
+            }
+        }
+    }
+    post {
+        success {
+            echo "✔️ Build réussi"
+        }
+        failure {
+            echo "❌ Build échoué"
+        }
+    }
+}
