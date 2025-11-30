@@ -1,14 +1,5 @@
 pipeline {
     agent any
-
-    triggers {
-        githubPush() // Déclenche le pipeline à chaque push GitHub
-    }
-
-    tools {
-        maven 'maven' // Assurez-vous que Maven est installé et configuré dans Jenkins
-    }
-
     environment {
         IMAGE_NAME = "student-management"
         CONTAINER_NAME = "student-app"
