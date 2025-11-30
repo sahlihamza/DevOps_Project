@@ -19,12 +19,14 @@ pipeline {
             steps {
                 echo "📦 Build Maven en cours..."
                 sh 'mvn clean package -DskipTests'
+                sh 'ls -l target/'  // Vérifie que le JAR est bien généré
             }
         }
 
         stage('Docker Build') {
             steps {
                 echo "🐳 Création de l'image Docker..."
+                sh 'ls -l'  // Vérifie que Dockerfile est présent
                 sh "docker build -t ${IMAGE_NAME} ."
             }
         }
