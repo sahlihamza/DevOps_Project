@@ -1,16 +1,11 @@
 pipeline {
     agent any
+
     environment {
-        IMAGE_NAME = "student-management"
-        CONTAINER_NAME = "student-app"
-        HOST_PORT = "8081"
-        CONTAINER_PORT = "8089"
-        SONARQUBE_URL = "http://172.23.185.68:9000" // URL de ton SonarQube
-        SONAR_TOKEN = credentials('sonarqube-token') // token stocké dans Jenkins Credentials
+        SONAR_TOKEN = credentials('sonar-token')
     }
 
     stages {
-        // 1️⃣ Checkout Git
         stage('Checkout') {
             steps {
                 echo 'Récupération du code depuis GitHub...'
@@ -18,65 +13,64 @@ pipeline {
             }
         }
 
-        // 2️⃣ Maven Clean & Compile
-        stage('Maven Clean & Compile') {
+        stage('Build') {
             steps {
-                echo "🔧 Maven Clean et Compile..."
+                echo 'Compilation du projet...'
                 sh 'mvn clean compile'
             }
         }
 
-        // 3️⃣ Analyse SonarQube
         stage('SonarQube Analysis') {
             steps {
-                echo "🔍 Analyse SonarQube en cours..."
-                sh """
-                    mvn sonar:sonar \
-                    -Dsonar.projectKey=student-management \
-                    -Dsonar.projectName="Student Management" \
-                    -Dsonar.host.url=${SONARQUBE_URL} \
-                    -Dsonar.login=${SONAR_TOKEN}
-                """
-                echo 'Analyse envoyée à SonarQube - Consultez l’interface pour le rapport'
+                echo 'Analyse de la qualité du code...'
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=student-management \
+                        -Dsonar.projectName="Student Management" \
+                        -Dsonar.host.url=http://172.23.185.68:9000 \
+                        -Dsonar.token=${SONAR_TOKEN}
+                    '''
+                }
+                echo 'Analyse envoyée à SonarQube - Consultez http://172.23.185.68:9000/dashboard?id=student-management'
             }
         }
 
-        // 4️⃣ Build Maven pour générer le JAR
-        stage('Build Maven') {
+        stage('Package') {
             steps {
-                echo "📦 Build Maven pour générer le JAR..."
+                echo 'Création du JAR...'
                 sh 'mvn package -DskipTests'
-                sh 'ls -l target/'
             }
         }
 
-        // 5️⃣ Création de l'image Docker
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
-                echo "🐳 Création de l'image Docker..."
-                sh "docker build -t ${IMAGE_NAME}:latest ."
+                echo 'Construction de l\'image Docker...'
+                sh 'docker build -t student-management:latest .'
             }
         }
 
-        // 6️⃣ Déploiement du conteneur Docker
-        stage('Deploy Docker') {
+        stage('Deploy') {
             steps {
-                echo "🚀 Lancement du conteneur Docker..."
-                sh """
-                    docker stop ${CONTAINER_NAME} || true
-                    docker rm ${CONTAINER_NAME} || true
-                    docker run -d --name ${CONTAINER_NAME} -p ${HOST_PORT}:${CONTAINER_PORT} ${IMAGE_NAME}:latest
-                """
+                echo 'Déploiement du conteneur...'
+                sh '''
+                    docker stop student-app || true
+                    docker rm student-app || true
+                    docker run -d \
+                      --name student-app \
+                      -p 8081:8089 \
+                      student-management:latest
+                '''
             }
         }
     }
 
     post {
         success {
-            echo "✔️ Pipeline terminé avec succès : Build Maven, SonarQube et Docker"
+            echo 'Pipeline réussi avec succès'
         }
         failure {
-            echo "❌ Pipeline échoué ! Vérifiez les logs"
+            echo 'Pipeline échoué - Vérifiez les logs'
         }
     }
 }
