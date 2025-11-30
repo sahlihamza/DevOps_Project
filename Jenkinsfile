@@ -23,15 +23,13 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 echo 'Analyse de la qualité du code...'
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=student-management \
-                        -Dsonar.projectName="Student Management" \
-                        -Dsonar.host.url=http://172.23.185.68:9000 \
-                        -Dsonar.token=${SONAR_TOKEN}
-                    '''
-                }
+                sh '''
+                    mvn sonar:sonar \
+                    -Dsonar.projectKey=student-management \
+                    -Dsonar.projectName="Student Management" \
+                    -Dsonar.host.url=http://172.23.185.68:9000 \
+                    -Dsonar.token=${SONAR_TOKEN}
+                '''
                 echo 'Analyse envoyée à SonarQube - Consultez http://172.23.185.68:9000/dashboard?id=student-management'
             }
         }
