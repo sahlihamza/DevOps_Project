@@ -26,14 +26,20 @@ pipeline {
         }
 
         // 3️⃣ Analyse SonarQube
-        stage('MVN SonarQube ') {
+        stage('SonarQube Analysis') {
             steps {
                 echo "🔍 Analyse SonarQube en cours..."
-                withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                    sh 'mvn sonar:sonar'
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    sh '''
+                       mvn sonar:sonar \
+                         -Dsonar.projectKey=student-management \
+                         -Dsonar.host.url=http://172.23.185.68:9000 \
+                         -Dsonar.login=$SONAR_TOKEN
+                    '''
                 }
             }
         }
+}
 
         // 4️⃣ Build Maven pour générer le JAR
         stage('Build Maven') {
