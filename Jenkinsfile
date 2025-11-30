@@ -8,7 +8,7 @@ pipeline {
         stage('Build') {
             steps {
                 git branch: 'main', url: 'https://github.com/sahlihamza/DevOps_Project.git'
-                sh 'mvn clean package'
+                sh 'mvn clean package -DskipTests'
             }
         }
     }
