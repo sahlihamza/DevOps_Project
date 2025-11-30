@@ -11,7 +11,7 @@ pipeline {
     }
     post {
         success {
-            echo "✔️ Build réussi"
+            echo "✔️ Build réussii"
         }
         failure {
             echo "❌ Build échoué"
